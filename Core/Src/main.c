@@ -111,7 +111,7 @@ int main(void)
   // 初始化
   Dbus_Init();
   // Enable_Motors();
-  HAL_Delay(1000);
+  // HAL_Delay(1000);
 
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOH, LED_G_Pin, GPIO_PIN_SET);
@@ -130,7 +130,7 @@ int main(void)
 
     // Gimbal_CAN_Tx(0,0,rc.RY*400,0);
     // HAL_GPIO_TogglePin(GPIOH,LED_G_Pin);
-    HAL_Delay(100);
+    HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
