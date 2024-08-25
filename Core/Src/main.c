@@ -95,7 +95,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
-  MX_IWDG_Init();
+  // MX_IWDG_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM7_Init();
@@ -131,7 +131,7 @@ int main(void)
     if(rc.sw1 == 1){HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_SET);}
     else{HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_RESET);}
     HAL_GPIO_TogglePin(GPIOH,LED_G_Pin);
-    
+
     Gimbal_CAN_Tx(0,0,rc.RY*400.0,0); // 根据 CAN 分析仪发现没有发送 CAN 信号
     HAL_Delay(50);
 
