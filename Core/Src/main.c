@@ -20,7 +20,6 @@
 #include "main.h"
 #include "can.h"
 #include "dma.h"
-#include "iwdg.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -29,6 +28,8 @@
 /* USER CODE BEGIN Includes */
 #include "rc.h"
 #include "motors.h"
+#include "buzzer.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +51,8 @@
 
 /* USER CODE BEGIN PV */
 extern RC_Type rc;
+extern float Shooter_Velocity[2]; // 单位: rpm
+extern float Loader_Velocity;     // 单位: rpm
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,10 +98,10 @@ int main(void)
   MX_USART3_UART_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
-  // MX_IWDG_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM7_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   //GPIO 点灯
@@ -110,9 +113,27 @@ int main(void)
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_SET);
 
   // 初始化
+  // Buzzer_beep();
   Dbus_Init();     // 初始化DJI遥控器
   Enable_Motors(); // 初始化DJI电机
   HAL_Delay(1000);
+
+  // PID 参数填装
+  pid_type_def shoot_pram_up;    // PID 初始化
+  pid_type_def shoot_pram_down;  // PID 初始化
+  pid_type_def shoot_pram_trig;  // PID 初始化
+  static const float PID_ARG[3] = {80.0f,0.0f,30.0f};
+  static const float PID_ARG_trig[3] = {50.0f,0.0f,40.0f};
+  static const float PID_MAX_OUT = 1000.0f;
+  static const float PID_MAX_IOUT = 0.0f; 
+
+  static const float shoot_rpm = 300; // 发射速度
+  float load_rpm = 400.0f; // 装弹速度
+
+  // PID 初始化
+  PID_init(&shoot_pram_up, PID_POSITION, PID_ARG, PID_MAX_OUT, PID_MAX_IOUT);
+  PID_init(&shoot_pram_down, PID_POSITION, PID_ARG, PID_MAX_OUT, PID_MAX_IOUT);
+  PID_init(&shoot_pram_trig, PID_POSITION, PID_ARG_trig, 1000.0f, 0.0f);
 
   // 亮绿灯
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_RESET);
@@ -132,7 +153,15 @@ int main(void)
     else{HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_RESET);}
     HAL_GPIO_TogglePin(GPIOH,LED_G_Pin);
 
-    Gimbal_CAN_Tx(0,0,rc.RY*400.0,0); // 根据 CAN 分析仪发现没有发送 CAN 信号
+    // 8-下摩擦轮 (正方向) 
+    // 7-上摩擦轮 (负方向)
+    // 6-拨弹盘
+
+    PID_calc(&shoot_pram_up, Shooter_Velocity[0], shoot_rpm*-(rc.sw1/2));
+    PID_calc(&shoot_pram_down, Shooter_Velocity[1], shoot_rpm*(rc.sw1/2));
+    PID_calc(&shoot_pram_trig, Loader_Velocity, load_rpm*rc.RY);
+
+    Gimbal_CAN_Tx(0,shoot_pram_trig.out,shoot_pram_up.out,shoot_pram_down.out); // 根据 CAN 分析仪发现没有发送 CAN 信号
     HAL_Delay(50);
 
   }
@@ -156,9 +185,8 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 6;
