@@ -95,7 +95,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
-  // MX_IWDG_Init();
+  MX_IWDG_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM7_Init();
@@ -110,8 +110,8 @@ int main(void)
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_SET);
 
   // 初始化
-  Dbus_Init();
-  // Enable_Motors();
+  Dbus_Init();     // 初始化DJI遥控器
+  Enable_Motors(); // 初始化DJI电机
   HAL_Delay(1000);
 
   // 亮绿灯
@@ -127,12 +127,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
     if(rc.sw1 == 1){HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_SET);}
     else{HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_RESET);}
-
-    // Gimbal_CAN_Tx(0,0,rc.RY*400,0);
     HAL_GPIO_TogglePin(GPIOH,LED_G_Pin);
+    
+    Gimbal_CAN_Tx(0,0,rc.RY*400.0,0); // 根据 CAN 分析仪发现没有发送 CAN 信号
     HAL_Delay(50);
+
   }
   /* USER CODE END 3 */
 }
