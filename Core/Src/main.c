@@ -96,9 +96,9 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   // MX_IWDG_Init();
-  // MX_TIM2_Init();
-  // MX_TIM3_Init();
-  // MX_TIM7_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
   //GPIO 点灯
@@ -106,6 +106,7 @@ int main(void)
   HAL_GPIO_WritePin(GPIOH, LED_G_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOH, LED_B_Pin, GPIO_PIN_RESET);
 
+  // 亮红灯
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_SET);
 
   // 初始化
@@ -113,6 +114,7 @@ int main(void)
   // Enable_Motors();
   HAL_Delay(1000);
 
+  // 亮绿灯
   HAL_GPIO_WritePin(GPIOH, LED_R_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOH, LED_G_Pin, GPIO_PIN_SET);
 
@@ -125,8 +127,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // if(rc.sw1 == 1){HAL_GPIO_WritePin(GPIOH,GPIO_PIN_10,GPIO_PIN_SET);}
-    // else{HAL_GPIO_WritePin(GPIOH,GPIO_PIN_10,GPIO_PIN_RESET);}
+    if(rc.sw1 == 1){HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_SET);}
+    else{HAL_GPIO_WritePin(GPIOH,LED_B_Pin,GPIO_PIN_RESET);}
 
     // Gimbal_CAN_Tx(0,0,rc.RY*400,0);
     HAL_GPIO_TogglePin(GPIOH,LED_G_Pin);
